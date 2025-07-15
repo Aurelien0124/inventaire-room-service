@@ -26,27 +26,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const formAjoutProduit = document.getElementById('form-ajout-produit');
     const corpsTableau = document.getElementById('corps-tableau');
-    const filtresCategorieDiv = document.getElementById('filtres-categorie'); // Nouveau !
+    const filtresCategorieDiv = document.getElementById('filtres-categorie');
+    const filtresStatutDiv = document.getElementById('filtres-statut'); // Nouveau !
     const SEUIL_STOCK_FAIBLE = 10;
+
+    // Variables pour stocker le filtre actif
+    let currentCategoryFilter = 'all';
+    let currentStatusFilter = 'all';
     
-    // Au chargement, afficher l'inventaire complet (toutes catégories)
-    afficherInventaire('all'); 
+    // Au chargement, afficher l'inventaire complet (toutes catégories, tous statuts)
+    afficherInventaire(currentCategoryFilter, currentStatusFilter); 
+
+    /**
+     * Détermine le statut d'un produit basé sur son stock.
+     * C'est une fonction utilitaire que nous allons utiliser pour filtrer côté client.
+     */
+    function getProductStatus(stock) {
+        if (stock <= 0) {
+            return 'EN RUPTURE';
+        } else if (stock <= SEUIL_STOCK_FAIBLE) {
+            return 'Stock Faible';
+        } else {
+            return 'En Stock';
+        }
+    }
 
     /**
      * Récupère les produits depuis la base de données Supabase et les affiche
-     * @param {string} categorieSelectionnee - La catégorie à filtrer ('all' pour toutes).
+     * @param {string} categorieFilter - La catégorie à filtrer ('all' pour toutes).
+     * @param {string} statutFilter - Le statut à filtrer ('all' pour tous).
      */
-    async function afficherInventaire(categorieSelectionnee = 'all') { // Ajout du paramètre
+    async function afficherInventaire(categorieFilter, statutFilter) { // Ajout du paramètre statutFilter
         corpsTableau.innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
 
-        let query = supabase.from('produits').select('*');
-
-        // Applique le filtre si une catégorie spécifique est sélectionnée
-        if (categorieSelectionnee !== 'all') {
-            query = query.eq('categorie', categorieSelectionnee);
-        }
-
-        const { data: produits, error } = await query.order('categorie', { ascending: true });
+        // On récupère TOUS les produits d'abord, pour pouvoir filtrer par statut côté client
+        // Supabase ne peut pas filtrer par une propriété calculée (le statut) directement
+        let { data: produits, error } = await supabase
+            .from('produits')
+            .select('*')
+            .order('categorie', { ascending: true }); // Toujours trier par catégorie pour l'ordre
 
         if (error) {
             console.error('Erreur lors de la récupération:', error);
@@ -54,21 +72,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // --- FILTRAGE CÔTÉ CLIENT ---
+        let produitsFiltres = produits.filter(produit => {
+            const matchesCategory = (categorieFilter === 'all' || produit.categorie === categorieFilter);
+            const matchesStatus = (statutFilter === 'all' || getProductStatus(produit.stock) === statutFilter);
+            return matchesCategory && matchesStatus;
+        });
+
         corpsTableau.innerHTML = '';
-        if (produits.length === 0) {
-            corpsTableau.innerHTML = '<tr><td colspan="5">Aucun produit dans cette catégorie.</td></tr>'; // Message adapté
+        if (produitsFiltres.length === 0) {
+            corpsTableau.innerHTML = '<tr><td colspan="5">Aucun produit ne correspond aux filtres.</td></tr>'; // Message adapté
             return;
         }
 
-        produits.forEach(produit => {
+        produitsFiltres.forEach(produit => { // Itérer sur les produits filtrés
             const tr = document.createElement('tr');
-            let statutTexte = 'En Stock';
+            let statutTexte = getProductStatus(produit.stock); // Utilise la nouvelle fonction
             let statutClasse = 'statut-ok';
             if (produit.stock <= 0) {
-                statutTexte = 'EN RUPTURE';
                 statutClasse = 'statut-rupture';
             } else if (produit.stock <= SEUIL_STOCK_FAIBLE) {
-                statutTexte = 'Stock Faible';
                 statutClasse = 'statut-faible';
             }
             
@@ -91,15 +114,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     filtresCategorieDiv.addEventListener('click', (e) => {
         const target = e.target;
         if (target.classList.contains('btn-categorie')) {
-            // Supprime la classe 'active' de tous les boutons
-            document.querySelectorAll('.btn-categorie').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            // Ajoute la classe 'active' au bouton cliqué
+            // Mise à jour de la classe active
+            document.querySelectorAll('.btn-categorie').forEach(btn => btn.classList.remove('active'));
             target.classList.add('active');
 
-            const categorieSelectionnee = target.dataset.categorie;
-            afficherInventaire(categorieSelectionnee); // Affiche les produits filtrés
+            currentCategoryFilter = target.dataset.categorie; // Met à jour le filtre de catégorie
+            afficherInventaire(currentCategoryFilter, currentStatusFilter); // Affiche les produits filtrés avec le statut actuel
+        }
+    });
+
+    // NOUVEAU : Gestion du clic sur les boutons de statut
+    filtresStatutDiv.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.classList.contains('btn-statut')) {
+            // Mise à jour de la classe active
+            document.querySelectorAll('.btn-statut').forEach(btn => btn.classList.remove('active'));
+            target.classList.add('active');
+
+            currentStatusFilter = target.dataset.statut; // Met à jour le filtre de statut
+            afficherInventaire(currentCategoryFilter, currentStatusFilter); // Affiche les produits filtrés avec la catégorie actuelle
         }
     });
 
@@ -131,22 +164,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const { error } = await supabase.from('produits').insert([{ nom, stock, categorie }]);
+        const { error } = await supabase.from('produits').insert([{ nom, stock, categorie });
         
         if (error) {
             console.error('Erreur lors de l\'ajout:', error);
             alert('Une erreur est survenue lors de l\'ajout : ' + error.message);
         } else {
             formAjoutProduit.reset(); 
-            // Après l'ajout, on peut vouloir revenir à la vue "Toutes les catégories"
-            // ou garder le filtre actuel. Ici, on revient à toutes les catégories.
+            // Après l'ajout, on réinitialise les filtres à "all" et on rafraîchit
             document.querySelectorAll('.btn-categorie').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.dataset.categorie === 'all') {
-                    btn.classList.add('active');
-                }
+                if (btn.dataset.categorie === 'all') btn.classList.add('active');
             });
-            afficherInventaire('all'); 
+            document.querySelectorAll('.btn-statut').forEach(btn => { // Réinitialise aussi les statuts
+                btn.classList.remove('active');
+                if (btn.dataset.statut === 'all') btn.classList.add('active');
+            });
+            currentCategoryFilter = 'all';
+            currentStatusFilter = 'all';
+            afficherInventaire(currentCategoryFilter, currentStatusFilter); 
         }
     });
     
@@ -163,10 +199,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Erreur lors de la suppression:', error);
                     alert('Une erreur est survenue lors de la suppression : ' + error.message);
                 }
-                // Après suppression, on rafraîchit avec le filtre ACTUEL
-                const activeCategoryBtn = document.querySelector('.btn-categorie.active');
-                const currentCategory = activeCategoryBtn ? activeCategoryBtn.dataset.categorie : 'all';
-                afficherInventaire(currentCategory);
+                // Après suppression, on rafraîchit avec les filtres ACTUELS
+                afficherInventaire(currentCategoryFilter, currentStatusFilter);
             }
             return;
         }
@@ -193,9 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Erreur lors de la mise à jour du stock:', error);
             alert('Une erreur est survenue lors de la mise à jour du stock : ' + error.message);
         }
-        // Après mise à jour du stock, on rafraîchit avec le filtre ACTUEL
-        const activeCategoryBtn = document.querySelector('.btn-categorie.active');
-        const currentCategory = activeCategoryBtn ? activeCategoryBtn.dataset.categorie : 'all';
-        afficherInventaire(currentCategory);
+        // Après mise à jour du stock, on rafraîchit avec les filtres ACTUELS
+        afficherInventaire(currentCategoryFilter, currentStatusFilter);
     });
 });

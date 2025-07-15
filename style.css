@@ -116,4 +116,31 @@ thead {
 .btn-categorie.active {
     background-color: #2ecc71; /* Couleur du bouton actif */
     font-weight: bold;
+}/* Styles pour les boutons de statut (similaires aux boutons de catégorie) */
+.btn-statut {
+    background-color: #5d6d7e; /* Couleur de fond par défaut */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 0.9em;
+}
+
+.btn-statut:hover {
+    background-color: #4a5a6a; /* Couleur au survol */
+}
+
+.btn-statut.active {
+    background-color: #2ecc71; /* Couleur du bouton actif */
+    font-weight: bold;
+}
+
+/* Variations de couleur pour les statuts spécifiques (optionnel, pour plus de clarté) */
+.btn-statut[data-statut="Stock Faible"].active {
+    background-color: #f39c12; /* Orange pour stock faible */
+}
+.btn-statut[data-statut="EN RUPTURE"].active {
+    background-color: #e74c3c; /* Rouge pour rupture */
 }
