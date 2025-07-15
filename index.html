@@ -13,45 +13,63 @@
     </header>
 
     <main>
-        <section class="card">
-            <h2>Filtrer par Catégorie</h2>
-            <div id="filtres-categorie" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <button class="btn-categorie active" data-categorie="all">Toutes les catégories</button>
-                <button class="btn-categorie" data-categorie="Boisson">Boisson</button>
-                <button class="btn-categorie" data-categorie="Entrée">Entrée</button>
-                <button class="btn-categorie" data-categorie="Plat">Plat</button>
-                <button class="btn-categorie" data-categorie="Pizza">Pizza</button>
-                <button class="btn-categorie" data-categorie="Dessert">Dessert</button>
-                <button class="btn-categorie" data-categorie="Snack">Snack</button>
-            </div>
-        </section>
+    <section class="card">
+        <h2>Ajouter un nouveau produit</h2>
+        <form id="form-ajout-produit">
+            <input type="text" id="nom-produit" placeholder="Nom du produit (ex: Bouteille d'eau)" required>
+            <input type="number" id="stock-initial" placeholder="Stock de départ" min="0" required>
+            <select id="categorie-produit" required>
+                <option value="" disabled selected>-- Choisir une catégorie --</option>
+                <option value="Boisson">Boisson</option>
+                <option value="Entrée">Entrée</option>
+                <option value="Plat">Plat</option>
+                <option value="Pizza">Pizza</option>
+                <option value="Dessert">Dessert</option>
+                <option value="Snack">Snack</option>
+            </select>
+            <button type="submit">Ajouter à l'inventaire</button>
+        </form>
+    </section>
 
-        <section class="card">
-            <h2>Filtrer par Statut</h2>
-            <div id="filtres-statut" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <button class="btn-statut active" data-statut="all">Tous les statuts</button>
-                <button class="btn-statut" data-statut="En Stock">En Stock</button>
-                <button class="btn-statut" data-statut="Stock Faible">Stock Faible</button>
-                <button class="btn-statut" data-statut="EN RUPTURE">EN RUPTURE</button>
-            </div>
-        </section>
+    <section class="card">
+        <h2>Filtrer par Catégorie</h2>
+        <div id="filtres-categorie" style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <button class="btn-categorie active" data-categorie="all">Toutes les catégories</button>
+            <button class="btn-categorie" data-categorie="Boisson">Boisson</button>
+            <button class="btn-categorie" data-categorie="Entrée">Entrée</button>
+            <button class="btn-categorie" data-categorie="Plat">Plat</button>
+            <button class="btn-categorie" data-categorie="Pizza">Pizza</button>
+            <button class="btn-categorie" data-categorie="Dessert">Dessert</button>
+            <button class="btn-categorie" data-categorie="Snack">Snack</button>
+        </div>
+    </section>
 
-        <section class="card">
-            <h2>Stock Actuel</h2>
-            <table id="tableau-inventaire">
-                <thead>
-                    <tr>
-                        <th>Nom du Produit</th>
-                        <th>Catégorie</th>
-                        <th>Stock Actuel</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="corps-tableau"></tbody>
-            </table>
-        </section>
-    </main>
+    <section class="card">
+        <h2>Filtrer par Statut</h2>
+        <div id="filtres-statut" style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <button class="btn-statut active" data-statut="all">Tous les statuts</button>
+            <button class="btn-statut" data-statut="En Stock">En Stock</button>
+            <button class="btn-statut" data-statut="Stock Faible">Stock Faible</button>
+            <button class="btn-statut" data-statut="EN RUPTURE">EN RUPTURE</button>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Stock Actuel</h2>
+        <table id="tableau-inventaire">
+            <thead>
+                <tr>
+                    <th>Nom du Produit</th>
+                    <th>Catégorie</th>
+                    <th>Stock Actuel</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="corps-tableau"></tbody>
+        </table>
+    </section>
+</main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
