@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const { error } = await supabase.from('produits').insert([{ nom, stock, categorie });
+       const { error } = await supabase.from('produits').insert([{ nom, stock, categorie }]);
         
         if (error) {
             console.error('Erreur lors de l\'ajout:', error);
