@@ -1,11 +1,14 @@
-// Remplacez les valeurs ci-dessous par les vôtres
-const SUPABASE_URL = 'https://xiqgxkpymztunrkrwxkv.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcWd4a3B5bXp0dW5ya3J3eGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDE3ODYsImV4cCI6MjA2ODE3Nzc4Nn0.CZhbS2B_31KQQWo73KBCrttoc8qEY3n_-a_LCjk5TJQ';
+// Les clés Supabase
+const SUPABASE_URL = 'https://xiqgxkpymztunrkrwxkv.supabase.co'; // N'oubliez pas de remplacer par votre URL
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcWd4a3B5bXp0dW5ya3J3eGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDE3ODYsImV4cCI6MjA2ODE3Nzc4Nn0.CZhbS2B_31KQQWo73KBCrttoc8qEY3n_-a_LCjk5TJQ'; // N'oubliez pas de remplacer par votre clé ANON
 
-// Initialise le client Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase; // Déclare la variable supabase ici
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialise le client Supabase DANS le DOMContentLoaded après un court délai
+    // Cela aide à contourner certains problèmes de chargement/CSP sur GitHub Pages
+    await new Promise(resolve => setTimeout(resolve, 50)); // Attendre 50ms
+    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const formAjoutProduit = document.getElementById('form-ajout-produit');
     const corpsTableau = document.getElementById('corps-tableau');
@@ -80,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error) {
             console.error('Erreur lors de l\'ajout:', error);
-            alert('Une erreur est survenue.');
+            alert('Une erreur est survenue lors de l\'ajout. Vérifiez la console.');
         } else {
             formAjoutProduit.reset();
             afficherInventaire(); // Rafraîchit la liste
@@ -99,9 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.classList.contains('btn-supprimer')) {
             const nomProduit = target.dataset.nom;
             if (confirm(`Êtes-vous sûr de vouloir supprimer le produit "${nomProduit}" ?`)) {
-                await supabase.from('produits').delete().eq('id', id);
+                const { error } = await supabase.from('produits').delete().eq('id', id);
+                if (error) {
+                    console.error('Erreur lors de la suppression:', error);
+                    alert('Une erreur est survenue lors de la suppression. Vérifiez la console.');
+                }
                 afficherInventaire();
             }
+            return; // Arrête l'exécution pour ne pas déclencher le prompt suivant
         }
 
         // Logique pour ajouter/retirer du stock
@@ -110,7 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!quantiteStr) return;
 
             const quantite = parseInt(quantiteStr, 10);
-            if (isNaN(quantite) || quantite <= 0) return;
+            if (isNaN(quantite) || quantite <= 0) {
+                alert("Veuillez entrer un nombre valide.");
+                return;
+            }
             
             let stockActuel = parseInt(target.dataset.stock, 10);
             let nouveauStock = target.classList.contains('btn-ajouter') 
@@ -118,7 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 : stockActuel - quantite;
 
             // Met à jour le stock dans la base de données
-            await supabase.from('produits').update({ stock: nouveauStock }).eq('id', id);
+            const { error } = await supabase.from('produits').update({ stock: nouveauStock }).eq('id', id);
+            if (error) {
+                console.error('Erreur lors de la mise à jour du stock:', error);
+                alert('Une erreur est survenue lors de la mise à jour du stock. Vérifiez la console.');
+            }
             afficherInventaire();
         }
     });
