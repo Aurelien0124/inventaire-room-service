@@ -12,11 +12,26 @@
         <h1>📋 Inventaire du Room Service</h1>
     </header>
 
-     </main>
+     <main>
+    <section class="card">
+        <h2>Ajouter un nouveau produit</h2>
+        <form id="form-ajout-produit">
+            <input type="text" id="nom-produit" placeholder="Nom du produit (ex: Bouteille d'eau)" required>
+            <input type="number" id="stock-initial" placeholder="Stock de départ" min="0" required>
+            <select id="categorie-produit" required>
+                <option value="" disabled selected>-- Choisir une catégorie --</option>
+                <option value="Boisson">Boisson</option>
+                <option value="Entrée">Entrée</option>
+                <option value="Plat">Plat</option>
+                <option value="Pizza">Pizza</option>
+                <option value="Dessert">Dessert</option>
+            </select>
+            <button type="submit">Ajouter à l'inventaire</button>
+        </form>
+    </section>
 
     <section class="card">
-        <h2>Filtrer par Catégorie</h2>
-        <div id="filtres-categorie" style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <h2>Filtrer par Catégorie</h2> <div id="filtres-categorie" style="display: flex; flex-wrap: wrap; gap: 10px;">
             <button class="btn-categorie active" data-categorie="all">Toutes les catégories</button>
             <button class="btn-categorie" data-categorie="Boisson">Boisson</button>
             <button class="btn-categorie" data-categorie="Entrée">Entrée</button>
@@ -38,12 +53,8 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="corps-tableau"></tbody>
+            <tbody id="corps-tableau">
+                </tbody>
         </table>
     </section>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
-
-</body>
-</html>
+</main>
