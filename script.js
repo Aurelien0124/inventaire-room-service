@@ -2,22 +2,19 @@
 const SUPABASE_URL = 'https://xiqgxkpymztunrkrwxkv.supabase.co'; // Copiez votre URL ici
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcWd4a3B5bXp0dW5ya3J3eGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDE3ODYsImV4cCI6MjA2ODE3Nzc4Nn0.CZhbS2B_31KQQWo73KBCrttoc8qEY3n_-a_LCjk5TJQ'; // Copiez votre clé ici
 
-// Déclaration de supabase en dehors de DOMContentLoaded, mais sans l'initialiser tout de suite
-let supabase;
+let supabase; // Déclaration globale de supabase
 
 // Cette fonction va attendre que window.supabase soit disponible
 function waitForSupabaseAndInitialize() {
     return new Promise((resolve) => {
         const checkSupabase = () => {
             if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                // Initialise le client Supabase en utilisant window.supabase
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 console.log("Supabase est initialisé. L'application démarre.");
-                resolve(); // Résout la promesse une fois que c'est bon
+                resolve();
             } else {
-                // Réessaye après un court délai
                 console.log("Attente de l'initialisation de window.supabase...");
-                setTimeout(checkSupabase, 50); // Réessaye toutes les 50ms
+                setTimeout(checkSupabase, 50);
             }
         };
         checkSupabase();
@@ -25,26 +22,31 @@ function waitForSupabaseAndInitialize() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Attendre que Supabase soit initialisé avant de faire quoi que ce soit d'autre
     await waitForSupabaseAndInitialize();
 
     const formAjoutProduit = document.getElementById('form-ajout-produit');
     const corpsTableau = document.getElementById('corps-tableau');
+    const filtresCategorieDiv = document.getElementById('filtres-categorie'); // Nouveau !
     const SEUIL_STOCK_FAIBLE = 10;
     
-    // Affiche l'inventaire au chargement
-    afficherInventaire();
+    // Au chargement, afficher l'inventaire complet (toutes catégories)
+    afficherInventaire('all'); 
 
     /**
      * Récupère les produits depuis la base de données Supabase et les affiche
+     * @param {string} categorieSelectionnee - La catégorie à filtrer ('all' pour toutes).
      */
-    async function afficherInventaire() {
+    async function afficherInventaire(categorieSelectionnee = 'all') { // Ajout du paramètre
         corpsTableau.innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
 
-        const { data: produits, error } = await supabase
-            .from('produits')
-            .select('*')
-            .order('categorie', { ascending: true });
+        let query = supabase.from('produits').select('*');
+
+        // Applique le filtre si une catégorie spécifique est sélectionnée
+        if (categorieSelectionnee !== 'all') {
+            query = query.eq('categorie', categorieSelectionnee);
+        }
+
+        const { data: produits, error } = await query.order('categorie', { ascending: true });
 
         if (error) {
             console.error('Erreur lors de la récupération:', error);
@@ -54,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         corpsTableau.innerHTML = '';
         if (produits.length === 0) {
-            corpsTableau.innerHTML = '<tr><td colspan="5">Aucun produit dans l\'inventaire.</td></tr>';
+            corpsTableau.innerHTML = '<tr><td colspan="5">Aucun produit dans cette catégorie.</td></tr>'; // Message adapté
             return;
         }
 
@@ -84,6 +86,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             corpsTableau.appendChild(tr);
         });
     }
+
+    // Gestion du clic sur les boutons de catégorie
+    filtresCategorieDiv.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.classList.contains('btn-categorie')) {
+            // Supprime la classe 'active' de tous les boutons
+            document.querySelectorAll('.btn-categorie').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // Ajoute la classe 'active' au bouton cliqué
+            target.classList.add('active');
+
+            const categorieSelectionnee = target.dataset.categorie;
+            afficherInventaire(categorieSelectionnee); // Affiche les produits filtrés
+        }
+    });
+
 
     formAjoutProduit.addEventListener('submit', async (e) => {
         e.preventDefault(); 
@@ -119,7 +138,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('Une erreur est survenue lors de l\'ajout : ' + error.message);
         } else {
             formAjoutProduit.reset(); 
-            afficherInventaire(); 
+            // Après l'ajout, on peut vouloir revenir à la vue "Toutes les catégories"
+            // ou garder le filtre actuel. Ici, on revient à toutes les catégories.
+            document.querySelectorAll('.btn-categorie').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.categorie === 'all') {
+                    btn.classList.add('active');
+                }
+            });
+            afficherInventaire('all'); 
         }
     });
     
@@ -136,7 +163,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Erreur lors de la suppression:', error);
                     alert('Une erreur est survenue lors de la suppression : ' + error.message);
                 }
-                afficherInventaire();
+                // Après suppression, on rafraîchit avec le filtre ACTUEL
+                const activeCategoryBtn = document.querySelector('.btn-categorie.active');
+                const currentCategory = activeCategoryBtn ? activeCategoryBtn.dataset.categorie : 'all';
+                afficherInventaire(currentCategory);
             }
             return;
         }
@@ -163,6 +193,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Erreur lors de la mise à jour du stock:', error);
             alert('Une erreur est survenue lors de la mise à jour du stock : ' + error.message);
         }
-        afficherInventaire();
+        // Après mise à jour du stock, on rafraîchit avec le filtre ACTUEL
+        const activeCategoryBtn = document.querySelector('.btn-categorie.active');
+        const currentCategory = activeCategoryBtn ? activeCategoryBtn.dataset.categorie : 'all';
+        afficherInventaire(currentCategory);
     });
 });
