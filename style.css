@@ -1,0 +1,100 @@
+/* Style général de la page */
+body {
+    font-family: system-ui, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+}
+
+/* Style pour les cartes (conteneurs) */
+.card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+/* Style pour le formulaire */
+form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+input[type="text"], input[type="number"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Style pour le tableau d'inventaire */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+thead {
+    background-color: #ecf0f1;
+}
+
+/* Couleurs pour les statuts */
+.statut-ok {
+    color: #27ae60;
+    font-weight: bold;
+}
+.statut-faible {
+    color: #f39c12;
+    font-weight: bold;
+}
+.statut-rupture {
+    color: #e74c3c;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Style pour les boutons d'action dans le tableau */
+.btn-action {
+    margin-right: 5px;
+    padding: 5px 10px;
+}
+
+.btn-ajouter { background-color: #2ecc71; }
+.btn-ajouter:hover { background-color: #27ae60; }
+
+.btn-retirer { background-color: #e74c3c; }
+.btn-retirer:hover { background-color: #c0392b; }
+/* AJOUT : Style pour le bouton de suppression définitive */
+.btn-supprimer { background-color: #34495e; }
+.btn-supprimer:hover { background-color: #2c3e50; }

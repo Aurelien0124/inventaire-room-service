@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventaire Room Service</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>📋 Inventaire du Room Service</h1>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Ajouter un nouveau produit</h2>
+            <form id="form-ajout-produit">
+                <input type="text" id="nom-produit" placeholder="Nom du produit (ex: Bouteille d'eau)" required>
+                <input type="number" id="stock-initial" placeholder="Stock de départ" min="0" required>
+                <select id="categorie-produit" required>
+                    <option value="" disabled selected>-- Choisir une catégorie --</option>
+                    <option value="Boisson">Boisson</option>
+                    <option value="Entrée">Entrée</option>
+                    <option value="Plat">Plat</option>
+                    <option value="Pizza">Pizza</option>
+                    <option value="Dessert">Dessert</option>
+                </select>
+                <button type="submit">Ajouter à l'inventaire</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Stock Actuel</h2>
+            <table id="tableau-inventaire">
+                <thead>
+                    <tr>
+                        <th>Nom du Produit</th>
+                        <th>Catégorie</th>
+                        <th>Stock Actuel</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="corps-tableau"></tbody>
+            </table>
+        </section>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js" defer></script>
+
+</body>
+</html>
