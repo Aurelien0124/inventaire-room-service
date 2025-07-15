@@ -1,25 +1,39 @@
-// Remplacez les valeurs ci-dessous par les vôtres (trouvées sur Supabase)
+// Remplacez les valeurs ci-dessous par les vôtres
 const SUPABASE_URL = 'https://xiqgxkpymztunrkrwxkv.supabase.co'; // Copiez votre URL ici
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpcWd4a3B5bXp0dW5ya3J3eGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDE3ODYsImV4cCI6MjA2ODE3Nzc4Nn0.CZhbS2B_31KQQWo73KBCrttoc8qEY3n_-a_LCjk5TJQ'; // Copiez votre clé ici
 
-// Initialise le client Supabase DIRECTEMENT.
-// Cette ligne doit s'exécuter seulement APRES que le script supabase-js ait fini de charger.
-// L'ordre des balises script dans index.html est crucial pour cela.
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// Si la ligne ci-dessus donne toujours 'undefined', cela signifie que window.supabase n'est pas prêt.
-// Dans ce cas, nous devons utiliser window.supabase explicitement, car c'est là que la librairie l'attache.
-// const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Déclaration de supabase en dehors de DOMContentLoaded, mais sans l'initialiser tout de suite
+let supabase;
 
+// Cette fonction va attendre que window.supabase soit disponible
+function waitForSupabaseAndInitialize() {
+    return new Promise((resolve) => {
+        const checkSupabase = () => {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                // Initialise le client Supabase en utilisant window.supabase
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("Supabase est initialisé. L'application démarre.");
+                resolve(); // Résout la promesse une fois que c'est bon
+            } else {
+                // Réessaye après un court délai
+                console.log("Attente de l'initialisation de window.supabase...");
+                setTimeout(checkSupabase, 50); // Réessaye toutes les 50ms
+            }
+        };
+        checkSupabase();
+    });
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Tout le reste de votre code JavaScript va ici, car le DOM est prêt.
+document.addEventListener('DOMContentLoaded', async () => {
+    // Attendre que Supabase soit initialisé avant de faire quoi que ce soit d'autre
+    await waitForSupabaseAndInitialize();
 
     const formAjoutProduit = document.getElementById('form-ajout-produit');
     const corpsTableau = document.getElementById('corps-tableau');
     const SEUIL_STOCK_FAIBLE = 10;
     
     // Affiche l'inventaire au chargement
-    afficherInventaire(); // Appeler cette fonction ici
+    afficherInventaire();
 
     /**
      * Récupère les produits depuis la base de données Supabase et les affiche
